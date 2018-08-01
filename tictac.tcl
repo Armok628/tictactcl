@@ -15,6 +15,7 @@ proc next_turn {} {
 		o {set turn x}
 		x {set turn o}
 	}
+}
 proc make_move {boardname x y} {
 	global turn
 	upvar $boardname board
