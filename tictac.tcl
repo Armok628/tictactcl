@@ -9,7 +9,12 @@ proc new_nested_board {} {lrepeat 9 [new_board]}
 global turn
 set turn x
 proc linear_index {x y} {expr $x+$y*3}
-proc next_turn {} {case $::turn o {set ::turn x} x {set ::turn o}}
+proc next_turn {} {
+	global turn
+	case $turn {
+		o {set turn x}
+		x {set turn o}
+	}
 proc make_move {boardname x y} {
 	global turn
 	upvar $boardname board
@@ -20,6 +25,7 @@ proc make_move {boardname x y} {
 }
 
 ##### Win Conditions
+global wins
 set wins [list \
 	[list 0 1 2] [list 3 4 5] [list 6 7 8] \
 	[list 0 3 6] [list 1 4 7] [list 2 5 8] \
@@ -30,7 +36,8 @@ proc check_stalemate {board} {
 	return 1
 }
 proc check_win {board} {
-	foreach win $::wins {
+	global wins
+	foreach win $wins {
 		set moves [lmap s $win {lindex $board $s}]
 		if {[tcl::mathop::eq {*}$moves]&&($moves ne "0 0 0")} {
 			return [lindex $moves 0]
