@@ -3,7 +3,7 @@
 
 ##### Board structures
 proc new_board {} {list {*}[string repeat "0 " 9]}
-proc new_nested_board {} {list {*}[subst [string repeat "{\[[info body new_board]\]} " 9]]}
+proc new_nested_board {} {list {*}[subst [string repeat "{[new_board]} " 9]]}
 
 ##### Turn taking/Move making
 global turn
