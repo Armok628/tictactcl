@@ -30,8 +30,7 @@ set wins [list \
 	[list 0 4 8] [list 2 4 6] \
 ]
 proc check_stalemate {board} {
-	foreach space $board {if {$space eq "0"} {return 0}}
-	return 1
+	return [expr [lsearch $board "0"]==-1]
 }
 proc check_win {board} {
 	global wins
