@@ -2,8 +2,8 @@
 #package require Tk
 
 ##### Board structures
-proc new_board {} {list {*}[string repeat "0 " 9]}
-proc new_nested_board {} {list {*}[subst [string repeat "{[new_board]} " 9]]}
+proc new_board {} {lrepeat 0 9}
+proc new_nested_board {} {lrepeat [new_board] 9}
 
 ##### Turn taking/Move making
 global turn
@@ -33,6 +33,9 @@ proc check_win {board} {
 		}
 	}
 	return "0"
+}
+proc check_global_win {board} {
+	check_win [lmap b $board {check_win $b}]
 }
 
 ##### Single-Board CLI (Temporary?)
