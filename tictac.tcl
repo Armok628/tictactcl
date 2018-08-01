@@ -2,8 +2,8 @@
 #package require Tk
 
 ##### Board structures
-proc new_board {} {lrepeat 0 9}
-proc new_nested_board {} {lrepeat [new_board] 9}
+proc new_board {} {lrepeat 9 0}
+proc new_nested_board {} {lrepeat 9 [new_board]}
 
 ##### Turn taking/Move making
 global turn
