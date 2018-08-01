@@ -1,10 +1,8 @@
 #!/usr/bin/tclsh
-#package require Tk
 
 ##### Board structures
 proc new_board {} {lrepeat 9 0}
 proc new_nested_board {} {lrepeat 9 [new_board]}
-
 ##### Turn taking/Move making
 global turn
 set turn x
@@ -24,7 +22,6 @@ proc make_move {boardname x y} {
 	lset board $lin $turn
 	next_turn
 }
-
 ##### Win Conditions
 global wins
 set wins [list \
@@ -75,4 +72,55 @@ proc tictactoe {{board ""}} {
 		return "0"
 	}
 	tailcall tictactoe $board
+}
+
+##### Frontend
+package require Tk
+proc pad_coords {xn yn wn hn p} {
+	if $p {
+		upvar $xn x
+		upvar $yn y
+		upvar $wn w
+		upvar $hn h
+		set x [expr {$x+$p}]
+		set y [expr {$y+$p}]
+		set w [expr {$w-2*$p}]
+		set h [expr {$h-2*$p}]
+	}
+}
+proc draw_board {c x y w h {p 0}} {
+	pad_coords x y w h $p
+	set x1 [expr {$x+$w/3}]
+	set x2 [expr {$x+2*$w/3}]
+	set y1 [expr {$y+$h/3}]
+	set y2 [expr {$y+2*$h/3}]
+	set w [expr {$x+$w}]
+	set h [expr {$y+$h}]
+	$c create line $x1 $y $x1 $h
+	$c create line $x2 $y $x2 $h
+	$c create line $x $y1 $w $y1
+	$c create line $x $y2 $w $y2
+}
+proc draw_x {c x y w h {p 0}} {
+	pad_coords x y w h $p
+	set x2 [expr {$x+$w}]
+	set y2 [expr {$y+$h}]
+	$c create line $x $y $x2 $y2 -fill blue
+	$c create line $x $y2 $x2 $y -fill blue
+}
+proc draw_o {c x y w h {p 0}} {
+	pad_coords x y w h $p
+	set x2 [expr {$x+$w}]
+	set y2 [expr {$y+$h}]
+	$c create oval $x $y $x2 $y2 -outline red
+}
+proc board_canvas {path {w 200} {h 200} {p 20}} {
+	canvas $path -background white -width $w -height $h
+	draw_board $path 0 0 $w $h $p
+	return $path
+}
+grid [board_canvas .b 200 200 20]
+bind .b <1> {
+	draw_$::turn .b [expr {%x-20}] [expr {%y-20}] 40 40
+	next_turn
 }
