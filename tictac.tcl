@@ -25,6 +25,10 @@ set wins [list \
 	[list 0 3 6] [list 1 4 7] [list 2 5 8] \
 	[list 0 4 8] [list 2 4 6] \
 ]
+proc check_stalemate {board} {
+	foreach space $board {if {$space eq "0"} {return 0}}
+	return 1
+}
 proc check_win {board} {
 	foreach win $::wins {
 		set moves [lmap s $win {lindex $board $s}]
@@ -55,7 +59,12 @@ proc tictactoe {{board ""}} {
 	if {$winner ne "0"} {
 		draw_board $board
 		puts "Winner: $winner"
-		exit
+		return $winner
+	}
+	if [check_stalemate $board] {
+		draw_board $board
+		puts "Stalemate"
+		return "0"
 	}
 	tailcall tictactoe $board
 }
