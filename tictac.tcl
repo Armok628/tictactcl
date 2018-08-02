@@ -19,7 +19,7 @@ proc make_move {board x y} {
 	global turn
 	set lin [linear_index $x $y]
 	if {[lindex $board $lin] ne "0"} {
-		error "Occupied: ([lindex $board $lin])"
+		error "Occupied"
 	}
 	lset board $lin $turn
 	return $board
@@ -38,7 +38,7 @@ proc check_win {board} {
 	global wins
 	foreach win $wins {
 		set moves [lmap s $win {lindex $board $s}]
-		if {[tcl::mathop::eq {*}$moves]&&($moves ne "0 0 0")} {
+		if {[tcl::mathop::eq {*}$moves]&&($moves ne "0 0 0")&&($moves ne "1 1 1")} {
 			return [lindex $moves 0]
 		}
 	}
@@ -105,7 +105,7 @@ proc update_legality_square {} {
 	global turn
 	catch {.board delete $legality_square}
 	set color [player_color $turn]
-	if {$next_board<0||![free_space [lindex $masterboard $next_board]]} {
+	if {$next_board==-1||![free_space [lindex $masterboard $next_board]]} {
 		set next_board -1
 		set legality_square [.board create rectangle 10 10 590 590 -outline $color]
 	} else {
@@ -142,7 +142,7 @@ proc handle_move {bl sl} {
 	global next_board
 	global turn
 	global legality_square
-	if {$next_board!=-1&&$bl!=$next_board} {error "Out of bounds"}
+	if {$next_board!=-1&&$bl!=$next_board} {error "Illegal move"}
 	lassign [2d_index $sl] sx sy
 	if [catch {lset masterboard $bl [make_move [lindex $masterboard $bl] $sx $sy]} err] {
 		error $err
@@ -152,13 +152,13 @@ proc handle_move {bl sl} {
 	draw_$turn .board {*}[cell_root $bl $sl] 48 48 5
 	set win [check_win [lindex $masterboard $bl]]
 	if {$win ne "0"} {
-		draw_$turn .board {*}[cell_root $bl 0] 146 146 -10
+		draw_$win .board {*}[cell_root $bl 0] 146 146 -10
 		lset masterboard $bl [string map "0 1" [lindex $masterboard $bl]]
 		set win [check_global_win $masterboard]
 		if {$win ne "0"} {
-			draw_$turn .board 0 0 600 600 10
+			draw_$win .board 0 0 600 600 10
 			.board delete $legality_square
-			set $next_board -2
+			set next_board -2
 			.board configure -state disabled
 			return
 		}
