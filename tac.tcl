@@ -9,7 +9,7 @@ set turn x
 proc linear_index {x y} {expr $x+$y*3}
 proc next_turn {} {
 	global turn
-	case $turn {
+	switch $turn {
 		o {set turn x}
 		x {set turn o}
 	}
@@ -120,7 +120,7 @@ proc board_canvas {path {w 200} {h 200} {p 20}} {
 	return $path
 }
 proc close_board {board} {
-	lmap s $board {case $s 0 1 default $s}
+	lmap s $board {switch $s 0 1 default $s}
 }
 
 ##### Temporary

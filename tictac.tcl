@@ -10,7 +10,7 @@ proc linear_index {x y} {expr $x+$y*3}
 proc 2d_index {l} {list [expr {$l%3}] [expr {$l/3}]}
 proc next_turn {} {
 	global turn
-	case $turn {
+	switch $turn {
 		o {set turn x}
 		x {set turn o}
 	}
@@ -92,7 +92,7 @@ global next_board
 set next_board -1
 global legality_square
 proc player_color {player} {
-	case $player {
+	switch $player {
 		x {return blue}
 		o {return red}
 		default {return black}
