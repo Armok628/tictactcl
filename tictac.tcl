@@ -169,6 +169,8 @@ proc handle_move {bl sl} {
 
 ##### GUI Setup
 package require Tk
+wm title . "Tic-Tac-Tcl"
+wm resizable . 0 0
 canvas .board -width 600 -height 600 -background white
 bind .board <1> {
 	handle_move {*}[game_coords %x %y]
