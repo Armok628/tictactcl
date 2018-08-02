@@ -20,7 +20,6 @@ proc make_move {boardname x y} {
 	set lin [linear_index $x $y]
 	if {[lindex $board $lin] ne "0"} {error "Occupied"}
 	lset board $lin $turn
-	next_turn
 }
 ##### Win Conditions
 global wins
@@ -47,7 +46,7 @@ proc check_global_win {board} {
 }
 
 ##### Single-Board CLI (Temporary?)
-proc draw_board {board} {
+proc puts_board {board} {
 	set i 0
 	foreach space $board {
 		puts -nonewline [expr {($space eq "x")||($space eq "o")?$space:" "}]
@@ -58,7 +57,11 @@ proc tictactoe {{board ""}} {
 	if {![llength $board]} {set board [new_board]}
 	draw_board $board
 	set move [gets stdin]
-	if [catch {make_move board {*}$move} err] {puts $err}
+	if [catch {make_move board {*}$move} err] {
+		puts $err
+	} else {
+		next_turn
+	}
 	set winner [check_win $board]
 	if {$winner ne "0"} {
 		draw_board $board
@@ -112,8 +115,33 @@ proc draw_o {c x y w h {p 0}} {
 	$c create oval $x $y $x2 $y2 -outline red
 }
 proc board_canvas {path {w 200} {h 200} {p 20}} {
-	canvas $path -width $w -height $h
+	canvas $path -width $w -height $h -background white
 	draw_board $path 0 0 $w $h $p
 	return $path
 }
+proc close_board {board} {
+	lmap s $board {case $s 0 1 default $s}
+}
+
+##### Temporary
+global board
+set board [new_board]
 grid [board_canvas .b 200 200 20]
+bind .b <1> {
+	global board
+	global turn
+	set cellwidth [expr {(200-2*20)/3}]
+	set cellheight [expr {(200-2*20)/3}]
+	set x [expr {int(floor(([.b canvasx %x]-20)/$cellwidth))}]
+	set y [expr {int(floor(([.b canvasy %y]-20)/$cellheight))}]
+	if {$x<0||$x>2||$y<0||$y>2} {error "Out of bounds"}
+	set l [linear_index $x $y]
+	make_move board $x $y
+	draw_$turn .b [expr {20+$x*$cellwidth}] [expr {20+$y*$cellheight}] $cellwidth $cellheight 5
+	next_turn
+	set win [check_win $board]
+	if {$win ne "0"} {
+		draw_$win .b 5 5 [expr {200-2*5}] [expr {200-2*5}]
+		set board {close_board $board}
+	}
+}
