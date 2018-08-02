@@ -7,6 +7,7 @@ proc new_nested_board {} {lrepeat 9 [new_board]}
 global turn
 set turn x
 proc linear_index {x y} {expr $x+$y*3}
+proc 2d_index {l} {list [expr {$l%3}] [expr {$l/3}]}
 proc next_turn {} {
 	global turn
 	case $turn {
@@ -14,12 +15,14 @@ proc next_turn {} {
 		x {set turn o}
 	}
 }
-proc make_move {boardname x y} {
+proc make_move {board x y} {
 	global turn
-	upvar $boardname board
 	set lin [linear_index $x $y]
-	if {[lindex $board $lin] ne "0"} {error "Occupied"}
+	if {[lindex $board $lin] ne "0"} {
+		error "Occupied: ([lindex $board $lin])"
+	}
 	lset board $lin $turn
+	return $board
 }
 ##### Win Conditions
 global wins
@@ -28,8 +31,8 @@ set wins [list \
 	[list 0 3 6] [list 1 4 7] [list 2 5 8] \
 	[list 0 4 8] [list 2 4 6] \
 ]
-proc check_stalemate {board} {
-	return [expr [lsearch $board "0"]==-1]
+proc free_space {board} {
+	return [expr [lsearch $board "0"]!=-1]
 }
 proc check_win {board} {
 	global wins
@@ -45,39 +48,7 @@ proc check_global_win {board} {
 	check_win [lmap b $board {check_win $b}]
 }
 
-##### Single-Board CLI (Temporary?)
-proc puts_board {board} {
-	set i 0
-	foreach space $board {
-		puts -nonewline [expr {($space eq "x")||($space eq "o")?$space:" "}]
-		if {!([incr i]%3)} {puts ""}
-	}
-}
-proc tictactoe {{board ""}} {
-	if {![llength $board]} {set board [new_board]}
-	draw_board $board
-	set move [gets stdin]
-	if [catch {make_move board {*}$move} err] {
-		puts $err
-	} else {
-		next_turn
-	}
-	set winner [check_win $board]
-	if {$winner ne "0"} {
-		draw_board $board
-		puts "Winner: $winner"
-		return $winner
-	}
-	if [check_stalemate $board] {
-		draw_board $board
-		puts "Stalemate"
-		return "0"
-	}
-	tailcall tictactoe $board
-}
-
 ##### Frontend
-package require Tk
 proc pad_coords {xn yn wn hn p} {
 	if $p {
 		upvar $xn x
@@ -114,34 +85,98 @@ proc draw_o {c x y w h {p 0}} {
 	set y2 [expr {$y+$h}]
 	$c create oval $x $y $x2 $y2 -outline red
 }
-proc board_canvas {path {w 200} {h 200} {p 20}} {
-	canvas $path -width $w -height $h -background white
-	draw_board $path 0 0 $w $h $p
-	return $path
-}
-proc close_board {board} {
-	lmap s $board {case $s 0 1 default $s}
-}
 
-##### Temporary
-global board
-set board [new_board]
-grid [board_canvas .b 200 200 20]
-bind .b <1> {
-	global board
-	global turn
-	set cellwidth [expr {(200-2*20)/3}]
-	set cellheight [expr {(200-2*20)/3}]
-	set x [expr {int(floor(([.b canvasx %x]-20)/$cellwidth))}]
-	set y [expr {int(floor(([.b canvasy %y]-20)/$cellheight))}]
-	if {$x<0||$x>2||$y<0||$y>2} {error "Out of bounds"}
-	set l [linear_index $x $y]
-	make_move board $x $y
-	draw_$turn .b [expr {20+$x*$cellwidth}] [expr {20+$y*$cellheight}] $cellwidth $cellheight 5
-	next_turn
-	set win [check_win $board]
-	if {$win ne "0"} {
-		draw_$win .b 5 5 [expr {200-2*5}] [expr {200-2*5}]
-		set board {close_board $board}
+global masterboard
+set masterboard [new_nested_board]
+global next_board
+set next_board -1
+global legality_square
+proc player_color {player} {
+	case $player {
+		x {return blue}
+		o {return red}
+		default {return black}
 	}
 }
+proc update_legality_square {} {
+	global legality_square
+	global next_board
+	global masterboard
+	global turn
+	catch {.board delete $legality_square}
+	set color [player_color $turn]
+	if {$next_board<0||![free_space [lindex $masterboard $next_board]]} {
+		set next_board -1
+		set legality_square [.board create rectangle 10 10 590 590 -outline $color]
+	} else {
+		lassign [2d_index $next_board] x y
+		set x1 [expr {30+186*$x}]
+		set x2 [expr {196+186*$x}]
+		set y1 [expr {30+186*$y}]
+		set y2 [expr {196+186*$y}]
+		set legality_square [.board create rectangle $x1 $y1 $x2 $y2 -outline $color]
+	}
+}
+proc game_coords {x y} {
+	set x [expr {$x-20}]
+	set y [expr {$y-20}]
+	set bx [expr {$x/186}]
+	if {$bx<0||$bx>2} {error "Out of bounds"}
+	set by [expr {$y/186}]
+	if {$by<0||$by>2} {error "Out of bounds"}
+	set sx [expr {(($x%186)-20)/48}]
+	if {$sx<0||$sx>2} {error "Out of bounds"}
+	set sy [expr {(($y%186)-20)/48}]
+	if {$sy<0||$sy>2} {error "Out of bounds"}
+	list [linear_index $bx $by] [linear_index $sx $sy]
+}
+proc cell_root {bl sl} {
+	lassign [2d_index $bl] bx by
+	lassign [2d_index $sl] sx sy
+	set x [expr {20+186*$bx+20+48*$sx}]
+	set y [expr {20+186*$by+20+48*$sy}]
+	list $x $y
+}
+proc handle_move {bl sl} {
+	global masterboard
+	global next_board
+	global turn
+	global legality_square
+	if {$next_board!=-1&&$bl!=$next_board} {error "Out of bounds"}
+	lassign [2d_index $sl] sx sy
+	if [catch {lset masterboard $bl [make_move [lindex $masterboard $bl] $sx $sy]} err] {
+		error $err
+		return
+	}
+	set next_board $sl
+	draw_$turn .board {*}[cell_root $bl $sl] 48 48 5
+	set win [check_win [lindex $masterboard $bl]]
+	if {$win ne "0"} {
+		draw_$turn .board {*}[cell_root $bl 0] 146 146 -10
+		lset masterboard $bl [string map "0 1" [lindex $masterboard $bl]]
+		set win [check_global_win $masterboard]
+		if {$win ne "0"} {
+			draw_$turn .board 0 0 600 600 10
+			.board delete $legality_square
+			set $next_board -2
+			.board configure -state disabled
+			return
+		}
+	}
+	next_turn
+	update_legality_square
+}
+
+##### GUI Setup
+package require Tk
+canvas .board -width 600 -height 600 -background white
+bind .board <1> {
+	handle_move {*}[game_coords %x %y]
+}
+draw_board .board 0 0 600 600 20
+for {set x 0} {$x<3} {incr x} {
+for {set y 0} {$y<3} {incr y} {
+	draw_board .board [expr {20+$x*186}] [expr {20+$y*186}] 186 186 20
+}}
+update_legality_square
+grid .board
