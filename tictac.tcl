@@ -87,18 +87,16 @@ proc pad_coords {xn yn wn hn p} {
 		set h [expr {$h-2*$p}]
 	}
 }
-proc draw_board {c x y w h {p 0}} {
-	pad_coords x y w h $p
-	set x1 [expr {$x+$w/3}]
-	set x2 [expr {$x+2*$w/3}]
-	set y1 [expr {$y+$h/3}]
-	set y2 [expr {$y+2*$h/3}]
-	set w [expr {$x+$w}]
-	set h [expr {$y+$h}]
-	$c create line $x1 $y $x1 $h
-	$c create line $x2 $y $x2 $h
-	$c create line $x $y1 $w $y1
-	$c create line $x $y2 $w $y2
+proc draw_board {c x0 y0 w h {p 0}} {
+	pad_coords x0 y0 w h $p
+	foreach n [list 0 1 2 3] {
+		set x($n) [expr {$x0+$n*$w/3}]
+		set y($n) [expr {$y0+$n*$h/3}]
+	}
+	$c create line $x(1) $y(0) $x(1) $y(3)
+	$c create line $x(2) $y(0) $x(2) $y(3)
+	$c create line $x(0) $y(1) $x(3) $y(1)
+	$c create line $x(0) $y(2) $x(3) $y(2)
 }
 proc draw_x {c x y w h {p 0}} {
 	pad_coords x y w h $p
@@ -114,12 +112,8 @@ proc draw_o {c x y w h {p 0}} {
 	$c create oval $x $y $x2 $y2 -outline red
 }
 proc board_canvas {path {w 200} {h 200} {p 20}} {
-	canvas $path -background white -width $w -height $h
+	canvas $path -width $w -height $h
 	draw_board $path 0 0 $w $h $p
 	return $path
 }
 grid [board_canvas .b 200 200 20]
-bind .b <1> {
-	draw_$::turn .b [expr {%x-20}] [expr {%y-20}] 40 40
-	next_turn
-}
