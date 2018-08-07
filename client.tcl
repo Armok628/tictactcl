@@ -1,7 +1,9 @@
 #!/usr/bin/tclsh
 source tictac.tcl
+wm title . "Tic-Tac-Tcl Client"
 update
 toplevel .client
+wm title .client "Connection"
 wm resizable .client 0 0
 wm title .client "Tic-Tac-Tcl Client"
 proc start {} {
