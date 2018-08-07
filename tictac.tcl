@@ -178,6 +178,7 @@ proc send_move {channel coords} {
 	flush $channel
 }
 proc receive_move {channel} {
+	catch {destroy .wait}
 	fileevent $channel readable {set ready 1}
 	vwait ready
 	set coords [gets $channel]
@@ -190,7 +191,7 @@ proc receive_move {channel} {
 proc wait_screen {} {
 	if [catch {toplevel .wait}] return
 	wm title .wait "Wait"
-	grid [ttk::label .wait.l -text "Waiting for opponent"] -padx 10 -pady 10
+	grid [ttk::label .wait.l -text "Waiting for opponent..."] -padx 10 -pady 10
 	update
 	grab set .wait
 }
@@ -201,6 +202,7 @@ proc receive_client {channel addr port} {
 }
 proc server_init {} {
 	socket -server receive_client 62899
+	update
 #	wait_screen
 }
 proc client_init {addr} {
