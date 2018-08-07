@@ -189,7 +189,8 @@ proc receive_move {channel} {
 }
 proc wait_screen {} {
 	if [catch {toplevel .wait}] return
-	grid [ttk::label .wait.l -text "Waiting for opponent"]
+	wm title .wait "Wait"
+	grid [ttk::label .wait.l -text "Waiting for opponent"] -padx 10 -pady 10
 	update
 	grab set .wait
 }
