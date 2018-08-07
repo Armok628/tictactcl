@@ -168,12 +168,64 @@ proc handle_move {bl sl} {
 }
 
 ##### GUI Setup
+global client
+global server_addr
+proc send_move {channel coords} {
+	fileevent $channel writable {set ready 1}
+	vwait ready
+	puts "Sending: $coords"
+	puts $channel $coords
+	flush $channel
+}
+proc receive_move {channel} {
+	fileevent $channel readable {set ready 1}
+	vwait ready
+	set coords [gets $channel]
+	flush $channel
+	puts "Received: $coords"
+	handle_move {*}$coords
+}
+proc wait_screen {} {
+	if [catch {toplevel .wait}] return
+	grid [ttk::label .wait.l -text "Waiting for opponent"]
+	update
+	grab set .wait
+}
+proc receive_client {channel addr port} {
+	global client
+	set client $channel
+	receive_move $client
+}
+proc server_start {} {
+	socket -server receive_client 62899
+#	wait_screen
+}
+proc client_start {addr} {
+	global server_addr
+	set server_addr $addr
+}
 package require Tk
 wm title . "Tic-Tac-Tcl"
 wm resizable . 0 0
 canvas .board -width 600 -height 600 -background white
 bind .board <1> {
-	handle_move {*}[game_coords %x %y]
+	set coords [game_coords %x %y]
+	handle_move {*}$coords
+	global client
+	global server_addr
+	if [info exists client] {
+		send_move $client $coords
+		close $client
+		unset client
+#		wait_screen
+	} elseif [info exists server_addr] {
+		update
+		set channel [socket $server_addr 62899]
+		send_move $channel $coords
+#		wait_screen
+		receive_move $channel
+		close $channel
+	}
 }
 draw_board .board 0 0 600 600 20
 for {set x 0} {$x<3} {incr x} {
@@ -182,3 +234,4 @@ for {set y 0} {$y<3} {incr y} {
 }}
 update_legality_square
 grid .board
+
