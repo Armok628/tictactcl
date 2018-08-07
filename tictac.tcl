@@ -183,7 +183,9 @@ proc receive_move {channel} {
 	set coords [gets $channel]
 	flush $channel
 	puts "Received: $coords"
-	handle_move {*}$coords
+	if {[llength $coords]==2} {
+		handle_move {*}$coords
+	}
 }
 proc wait_screen {} {
 	if [catch {toplevel .wait}] return
@@ -196,13 +198,29 @@ proc receive_client {channel addr port} {
 	set client $channel
 	receive_move $client
 }
-proc server_start {} {
+proc server_init {} {
 	socket -server receive_client 62899
 #	wait_screen
 }
-proc client_start {addr} {
+proc client_init {addr} {
 	global server_addr
 	set server_addr $addr
+}
+proc server_send {coords} {
+	global client
+	send_move $client $coords
+	close $client
+	unset client
+#	wait_screen
+}
+proc client_send {coords} {
+	global server_addr
+	update
+	set channel [socket $server_addr 62899]
+	send_move $channel $coords
+#	wait_screen
+	receive_move $channel
+	close $channel
 }
 package require Tk
 wm title . "Tic-Tac-Tcl"
@@ -211,20 +229,10 @@ canvas .board -width 600 -height 600 -background white
 bind .board <1> {
 	set coords [game_coords %x %y]
 	handle_move {*}$coords
-	global client
-	global server_addr
 	if [info exists client] {
-		send_move $client $coords
-		close $client
-		unset client
-#		wait_screen
+		server_send $coords
 	} elseif [info exists server_addr] {
-		update
-		set channel [socket $server_addr 62899]
-		send_move $channel $coords
-#		wait_screen
-		receive_move $channel
-		close $channel
+		client_send $coords
 	}
 }
 draw_board .board 0 0 600 600 20
