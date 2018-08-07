@@ -14,3 +14,4 @@ bind .client.entry <Return> start
 grid .client.entry -column 0 -row 0
 grid .client.button -column 0 -row 1
 grab set .client
+focus .client.entry
