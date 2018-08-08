@@ -167,7 +167,7 @@ proc handle_move {bl sl} {
 	update_legality_square
 }
 
-##### GUI Setup
+##### Network
 global client
 global server_addr
 proc send_move {channel coords} {
@@ -225,6 +225,8 @@ proc client_send {coords} {
 	receive_move $channel
 	close $channel
 }
+
+##### GUI Setup
 package require Tk
 wm title . "Tic-Tac-Tcl"
 wm resizable . 0 0
