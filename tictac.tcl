@@ -203,7 +203,7 @@ proc receive_client {channel addr port} {
 proc server_init {} {
 	socket -server receive_client 62899
 	update
-#	wait_screen
+	wait_screen
 }
 proc client_init {addr} {
 	global server_addr
