@@ -1,5 +1,4 @@
 #!/usr/bin/tclsh
-
 ##### Board structures
 proc new_board {} {lrepeat 9 0}
 proc new_nested_board {} {lrepeat 9 [new_board]}
@@ -47,7 +46,6 @@ proc check_win {board} {
 proc check_global_win {board} {
 	check_win [lmap b $board {check_win $b}]
 }
-
 ##### Frontend
 proc pad_coords {xn yn wn hn p} {
 	if $p {
@@ -85,7 +83,6 @@ proc draw_o {c x y w h {p 0}} {
 	set y2 [expr {$y+$h}]
 	$c create oval $x $y $x2 $y2 -outline red
 }
-
 global masterboard
 set masterboard [new_nested_board]
 global next_board
@@ -166,7 +163,6 @@ proc handle_move {bl sl} {
 	next_turn
 	update_legality_square
 }
-
 ##### Network
 global client
 global server_addr
@@ -225,7 +221,6 @@ proc client_send {coords} {
 	receive_move $channel
 	close $channel
 }
-
 ##### GUI Setup
 package require Tk
 wm title . "Tic-Tac-Tcl"
