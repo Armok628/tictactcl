@@ -1,52 +1,10 @@
 #!/usr/bin/tclsh
-##### Board structures
-proc new_board {} {lrepeat 9 0}
-proc new_nested_board {} {lrepeat 9 [new_board]}
-##### Turn taking/Move making
-global turn
-set turn x
+source backend.tcl
+global game_state
+set game_state [new_game]
+##### Frontend
 proc linear_index {x y} {expr $x+$y*3}
 proc 2d_index {l} {list [expr {$l%3}] [expr {$l/3}]}
-proc next_turn {} {
-	global turn
-	switch $turn {
-		o {set turn x}
-		x {set turn o}
-	}
-}
-proc make_move {board x y} {
-	global turn
-	set lin [linear_index $x $y]
-	if {[lindex $board $lin] ne "0"} {
-		error "Occupied"
-	}
-	lset board $lin $turn
-	return $board
-}
-##### Win Conditions
-global wins
-set wins [list \
-	[list 0 1 2] [list 3 4 5] [list 6 7 8] \
-	[list 0 3 6] [list 1 4 7] [list 2 5 8] \
-	[list 0 4 8] [list 2 4 6] \
-]
-proc free_space {board} {
-	return [expr [lsearch $board "0"]!=-1]
-}
-proc check_win {board} {
-	global wins
-	foreach win $wins {
-		set moves [lmap s $win {lindex $board $s}]
-		if {[tcl::mathop::eq {*}$moves]&&($moves ne "0 0 0")&&($moves ne "1 1 1")} {
-			return [lindex $moves 0]
-		}
-	}
-	return "0"
-}
-proc check_global_win {board} {
-	check_win [lmap b $board {check_win $b}]
-}
-##### Frontend
 proc pad_coords {xn yn wn hn p} {
 	if $p {
 		upvar $xn x
@@ -83,11 +41,6 @@ proc draw_o {c x y w h {p 0}} {
 	set y2 [expr {$y+$h}]
 	$c create oval $x $y $x2 $y2 -outline red
 }
-global masterboard
-set masterboard [new_nested_board]
-global next_board
-set next_board -1
-global legality_square
 proc player_color {player} {
 	switch $player {
 		x {return blue}
@@ -95,18 +48,17 @@ proc player_color {player} {
 		default {return black}
 	}
 }
+global legality_square
 proc update_legality_square {} {
+	global game_state
 	global legality_square
-	global next_board
-	global masterboard
-	global turn
+	set nb [next_board $game_state]
 	catch {.board delete $legality_square}
-	set color [player_color $turn]
-	if {$next_board==-1||![free_space [lindex $masterboard $next_board]]} {
-		set next_board -1
+	set color [player_color [turn $game_state]]
+	if {$nb==-1} {
 		set legality_square [.board create rectangle 10 10 590 590 -outline $color]
 	} else {
-		lassign [2d_index $next_board] x y
+		lassign [2d_index $nb] x y
 		set x1 [expr {30+186*$x}]
 		set x2 [expr {196+186*$x}]
 		set y1 [expr {30+186*$y}]
@@ -134,35 +86,21 @@ proc cell_root {bl sl} {
 	set y [expr {20+186*$by+20+48*$sy}]
 	list $x $y
 }
+
 proc handle_move {bl sl} {
-	global masterboard
-	global next_board
-	global turn
-	global legality_square
-	if {$next_board!=-1&&$bl!=$next_board} {error "Illegal move"}
-	lassign [2d_index $sl] sx sy
-	if [catch {lset masterboard $bl [make_move [lindex $masterboard $bl] $sx $sy]} err] {
+	global game_state
+	set t [turn $game_state]
+	if {[catch {make_move game_state $bl $sl} err]} {
 		error $err
-		return
-	}
-	set next_board $sl
-	draw_$turn .board {*}[cell_root $bl $sl] 48 48 5
-	set win [check_win [lindex $masterboard $bl]]
-	if {$win ne "0"} {
-		draw_$win .board {*}[cell_root $bl 0] 146 146 -10
-		lset masterboard $bl [string map "0 1" [lindex $masterboard $bl]]
-		set win [check_global_win $masterboard]
-		if {$win ne "0"} {
-			draw_$win .board 0 0 600 600 10
-			.board delete $legality_square
-			set next_board -2
-			.board configure -state disabled
-			return
+	} else {
+		draw_$t .board {*}[cell_root $bl $sl] 48 48 5
+		if {[check_win [lindex [board $game_state] $bl]] ne "_"} {
+			draw_$t .board {*}[cell_root $bl 0] 146 146 -10
 		}
+		update_legality_square
 	}
-	next_turn
-	update_legality_square
 }
+
 ##### Network
 global client
 global server_addr
