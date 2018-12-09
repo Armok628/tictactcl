@@ -35,7 +35,7 @@ proc make_move {game_var b s} {
 	set t [turn $game]
 	if {[check_game_over $game] ne "_"} {
 		return -code 1 "Illegal move ($t => $b, $s); Game over"
-	} elseif {$b!=$nb&&$nb!=-1} {
+	} elseif {($b!=$nb&&$nb!=-1)||($b<0||$b>8||$s<0||$s>8)} {
 		return -code 1 "Illegal move ($t => $b, $s); Out of bounds"
 	} elseif {[check_win [lindex $game 2 $b]] ne "_"} {
 		return -code 1 "Illegal move ($t => $b, $s); Board won"
