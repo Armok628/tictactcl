@@ -87,7 +87,8 @@ proc cell_root {bl sl} {
 	list $x $y
 }
 
-proc handle_move {b s} {
+proc handle_move {coords} {
+	lassign $coords b s
 	global game_state
 	global legality_square
 	set t [turn $game_state]
@@ -110,78 +111,20 @@ proc handle_move {b s} {
 	}
 	update
 }
-
-##### Network
-global client
-global server_addr
-proc send_move {channel coords} {
-	fileevent $channel writable {set ready 1}
-	vwait ready
-	puts "Sending: $coords"
-	puts $channel $coords
-	flush $channel
-}
-proc receive_move {channel} {
-	catch {destroy .wait}
-	fileevent $channel readable {set ready 1}
-	vwait ready
-	set coords [gets $channel]
-	flush $channel
-	puts "Received: $coords"
-	if {[llength $coords]==2} {
-		handle_move {*}$coords
-	}
-}
-proc wait_screen {} {
-	if [catch {toplevel .wait}] return
-	wm title .wait "Wait"
-	grid [ttk::label .wait.l -text "Waiting for opponent..."] -padx 10 -pady 10
-	update
-	grab set .wait
-}
-proc receive_client {channel addr port} {
-	global client
-	set client $channel
-	receive_move $client
-}
-proc server_init {} {
-	socket -server receive_client 62899
-	update
-	wait_screen
-}
-proc client_init {addr} {
-	global server_addr
-	set server_addr $addr
-}
-proc server_send {coords} {
-	global client
-	send_move $client $coords
-	close $client
-	unset client
-#	wait_screen
-}
-proc client_send {coords} {
-	global server_addr
-	update
-	set channel [socket $server_addr 62899]
-	send_move $channel $coords
-#	wait_screen
-	receive_move $channel
-	close $channel
-}
 ##### GUI Setup
 package require Tk
 wm title . "Tic-Tac-Tcl"
 wm resizable . 0 0
 canvas .board -width 600 -height 600 -background white
 bind .board <1> {
-	set coords [game_coords %x %y]
-	handle_move {*}$coords
-	if [info exists client] {
-		server_send $coords
-	} elseif [info exists server_addr] {
-		client_send $coords
-	}
+	handle_move [game_coords %x %y]
+}
+source ai.tcl
+bind .board <2> {
+	handle_move [think $game_state]
+}
+bind .board <3> {
+	handle_move [random_move $game_state]
 }
 draw_board .board 0 0 600 600 20
 for {set x 0} {$x<3} {incr x} {
@@ -190,11 +133,4 @@ for {set y 0} {$y<3} {incr y} {
 }}
 update_legality_square
 grid .board
-########################
-source ai.tcl
-bind .board <3> {
-	handle_move {*}[random_move $game_state]
-}
-bind .board <2> {
-	handle_move {*}[think $game_state]
-}
+update
