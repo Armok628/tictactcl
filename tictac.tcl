@@ -70,13 +70,13 @@ proc game_coords {x y} {
 	set x [expr {$x-20}]
 	set y [expr {$y-20}]
 	set bx [expr {$x/186}]
-	if {$bx<0||$bx>2} {error "Out of bounds"}
+	if {$bx<0||$bx>2} {error "Click occurred out of bounds"}
 	set by [expr {$y/186}]
-	if {$by<0||$by>2} {error "Out of bounds"}
+	if {$by<0||$by>2} {error "Click occurred out of bounds"}
 	set sx [expr {(($x%186)-20)/48}]
-	if {$sx<0||$sx>2} {error "Out of bounds"}
+	if {$sx<0||$sx>2} {error "Click occurred out of bounds"}
 	set sy [expr {(($y%186)-20)/48}]
-	if {$sy<0||$sy>2} {error "Out of bounds"}
+	if {$sy<0||$sy>2} {error "Click occurred out of bounds"}
 	list [linear_index $bx $by] [linear_index $sx $sy]
 }
 proc cell_root {bl sl} {
@@ -89,6 +89,7 @@ proc cell_root {bl sl} {
 
 proc handle_move {bl sl} {
 	global game_state
+	global legality_square
 	set t [turn $game_state]
 	if {[catch {make_move game_state $bl $sl} err]} {
 		error $err
@@ -97,8 +98,17 @@ proc handle_move {bl sl} {
 		if {[check_win [lindex [board $game_state] $bl]] ne "_"} {
 			draw_$t .board {*}[cell_root $bl 0] 146 146 -10
 		}
-		update_legality_square
+		set winner [check_game_over [board $game_state]]
+		if {$winner ne "_"} {
+			if {$winner ne "#"} {
+				draw_$winner .board 0 0 600 600 10
+			}
+			.board delete $legality_square
+		} else {
+			update_legality_square
+		}
 	}
+	update
 }
 
 ##### Network
@@ -180,4 +190,14 @@ for {set y 0} {$y<3} {incr y} {
 }}
 update_legality_square
 grid .board
-
+########################
+source ai.tcl
+bind .board <3> {
+	set coords [random_move $game_state]
+	if {[llength $coords]} {handle_move {*}$coords}
+}
+bind .board <2> {
+	while {[set coords [random_move $game_state]] ne ""} {
+		handle_move {*}$coords
+	}
+}

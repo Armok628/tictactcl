@@ -25,11 +25,35 @@ proc check_win {board} {
 	}
 	return "_"
 }
+proc no_space {board} {
+	if {[llength [lindex $board 0]]==1} {
+		return [expr {[check_win $board] ne "_"||[lsearch $board "_"]==-1}]
+	} else {
+		foreach b $board {
+			if {![no_space $b]} {
+				return 0
+			}
+		}
+		return 1
+	}
+}
+proc check_game_over {board} {
+	set winner [check_win [lmap b $board {check_win $b}]]
+	if {$winner ne "_"} {
+		return $winner
+	} elseif {[no_space $board]} {
+		return "#"
+	} else {
+		return "_"
+	}
+}
 proc make_move {game_name b s} {
 	upvar $game_name game
 	set nb [next_board $game]
 	set t [turn $game]
-	if {$b!=$nb&&$nb!=-1} {
+	if {[check_game_over [board $game]] ne "_"} {
+		return -code 1 "Illegal move ($t => $b, $s); Game over"
+	} elseif {$b!=$nb&&$nb!=-1} {
 		return -code 1 "Illegal move ($t => $b, $s); Out of bounds"
 	} elseif {[check_win [lindex $game 2 $b]] ne "_"} {
 		return -code 1 "Illegal move ($t => $b, $s); Board won"
@@ -37,6 +61,7 @@ proc make_move {game_name b s} {
 		return -code 1 "Illegal move ($t => $b, $s); Occupied"
 	}
 	lset game 2 $b $s $t
-	lset game 1 [expr {[check_win [lindex $game 2 $s]] ne "_"?-1:$s}]
+	set nb [lindex $game 2 $s]
+	lset game 1 [expr {[no_space $nb]||[check_win $nb] ne "_"?-1:$s}]
 	lset game 0 [next_turn $t]
 }
