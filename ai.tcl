@@ -1,8 +1,5 @@
-proc randelt {l} {
-	lindex $l [expr {int(rand()*[llength $l])}]
-}
-proc random_move {game} {
-	if {[check_game_over [board $game]] ne "_"} return
+proc possible_moves {game} {
+	if {[check_game_over $game] ne "_"} return
 	set moves [list]
 	set b [next_board $game]
 	if {$b==-1} {
@@ -21,5 +18,9 @@ proc random_move {game} {
 			}
 		}
 	}
+	return $moves
+}
+proc random_move {game} {
+	set moves [possible_moves $game]
 	return [lindex $moves [expr {int(rand()*[llength $moves])}]]
 }

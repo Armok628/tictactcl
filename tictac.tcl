@@ -87,26 +87,26 @@ proc cell_root {bl sl} {
 	list $x $y
 }
 
-proc handle_move {bl sl} {
+proc handle_move {b sl} {
 	global game_state
 	global legality_square
 	set t [turn $game_state]
-	if {[catch {make_move game_state $bl $sl} err]} {
+	if {[catch {make_move game_state $b $sl} err]} {
 		error $err
+	}
+	draw_$t .board {*}[cell_root $b $sl] 48 48 5
+	set winner [check_win [lindex [board $game_state] $b]]
+	if {$winner ne "_"&&$winner ne "tie"} {
+		draw_$winner .board {*}[cell_root $b 0] 146 146 -10
+	}
+	set winner [check_game_over $game_state]
+	if {$winner ne "_"} {
+		.board delete $legality_square
+		if {$winner ne "tie"} {
+			draw_$winner .board 0 0 600 600 10
+		}
 	} else {
-		draw_$t .board {*}[cell_root $bl $sl] 48 48 5
-		if {[check_win [lindex [board $game_state] $bl]] ne "_"} {
-			draw_$t .board {*}[cell_root $bl 0] 146 146 -10
-		}
-		set winner [check_game_over [board $game_state]]
-		if {$winner ne "_"} {
-			if {$winner ne "tie"} {
-				draw_$winner .board 0 0 600 600 10
-			}
-			.board delete $legality_square
-		} else {
-			update_legality_square
-		}
+		update_legality_square
 	}
 	update
 }
@@ -192,12 +192,11 @@ update_legality_square
 grid .board
 ########################
 source ai.tcl
-bind .board <3> {
-	set coords [random_move $game_state]
-	if {[llength $coords]} {handle_move {*}$coords}
-}
 bind .board <2> {
 	while {[set coords [random_move $game_state]] ne ""} {
 		handle_move {*}$coords
 	}
+}
+bind .board <3> {
+	puts [check_game_over $game_state]
 }

@@ -1,4 +1,3 @@
-#!/usr/bin/tclsh
 proc new_game {} {
 	list x -1 [lrepeat 9 [lrepeat 9 "_"]]
 }
@@ -25,14 +24,16 @@ proc check_win {board} {
 	}
 	return [expr [lsearch $board "_"]==-1?"tie":"_"]
 }
-proc check_game_over {board} {
-	check_win [lmap b $board {check_win $b}]
+proc check_game_over {game} {
+	set board [board $game]
+	set wins [lmap b $board {check_win $b}]
+	return [check_win $wins]
 }
-proc make_move {game_name b s} {
-	upvar $game_name game
+proc make_move {game_var b s} {
+	upvar $game_var game
 	set nb [next_board $game]
 	set t [turn $game]
-	if {[check_game_over [board $game]] ne "_"} {
+	if {[check_game_over $game] ne "_"} {
 		return -code 1 "Illegal move ($t => $b, $s); Game over"
 	} elseif {$b!=$nb&&$nb!=-1} {
 		return -code 1 "Illegal move ($t => $b, $s); Out of bounds"
