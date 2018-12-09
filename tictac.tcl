@@ -100,7 +100,7 @@ proc handle_move {bl sl} {
 		}
 		set winner [check_game_over [board $game_state]]
 		if {$winner ne "_"} {
-			if {$winner ne "#"} {
+			if {$winner ne "tie"} {
 				draw_$winner .board 0 0 600 600 10
 			}
 			.board delete $legality_square

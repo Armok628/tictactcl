@@ -23,29 +23,10 @@ proc check_win {board} {
 		set m [lmap i $win {lindex $board $i}]
 		switch $m {x x x} {return x} {o o o} {return o}
 	}
-	return "_"
-}
-proc no_space {board} {
-	if {[llength [lindex $board 0]]==1} {
-		return [expr {[check_win $board] ne "_"||[lsearch $board "_"]==-1}]
-	} else {
-		foreach b $board {
-			if {![no_space $b]} {
-				return 0
-			}
-		}
-		return 1
-	}
+	return [expr [lsearch $board "_"]==-1?"tie":"_"]
 }
 proc check_game_over {board} {
-	set winner [check_win [lmap b $board {check_win $b}]]
-	if {$winner ne "_"} {
-		return $winner
-	} elseif {[no_space $board]} {
-		return "#"
-	} else {
-		return "_"
-	}
+	check_win [lmap b $board {check_win $b}]
 }
 proc make_move {game_name b s} {
 	upvar $game_name game
@@ -62,6 +43,6 @@ proc make_move {game_name b s} {
 	}
 	lset game 2 $b $s $t
 	set nb [lindex $game 2 $s]
-	lset game 1 [expr {[no_space $nb]||[check_win $nb] ne "_"?-1:$s}]
+	lset game 1 [expr {[check_win $nb] ne "_"?-1:$s}]
 	lset game 0 [next_turn $t]
 }
