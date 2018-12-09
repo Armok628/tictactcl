@@ -34,23 +34,29 @@ proc finish_game {game_var} {
 		make_move game {*}$move
 	}
 }
-proc think {game} {
+proc think {game {bar 0}} {
 	global ai_level
 	set player [turn $game]
+	set opponent [next_turn $player]
 	set moves [possible_moves $game]
 	set wincounts [list]
+	puts stderr "\nTurn: $player\nLevel: $ai_level";
 	foreach move $moves {
 		set wins 0
+		puts stderr -nonewline "\t$move: "; flush stdout;
 		for {set i 0} {$i<$ai_level} {incr i} {
 			set tmp $game
 			make_move tmp {*}$move
 			finish_game tmp
-			if {[check_game_over $tmp] eq $player} {incr wins}
+			switch [check_game_over $tmp] \
+				$player {incr wins} \
+				$opponent {incr wins -1}
 		}
+		puts stderr [format "\t%2d" $wins];
 		lappend wincounts $wins
 	}
-	set choices [list]
-	set maxwins 0
+	set choices [list [lindex $moves 0]]
+	set maxwins [lindex $wincounts 0]
 	foreach move $moves wins $wincounts {
 		if {$wins>$maxwins} {
 			set choices [list]
@@ -60,5 +66,7 @@ proc think {game} {
 			lappend choices $move
 		}
 	}
-	return [randelt $choices]
+	set choice [randelt $choices]
+	puts stderr "Chose $choice ($maxwins)\n"
+	return $choice
 }
