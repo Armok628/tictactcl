@@ -24,7 +24,7 @@ proc print_game {game} {
 source backend.tcl
 source ai.tcl
 set game [new_game]
-while {1} {
+while {[set winner [check_game_over $game]] eq "_"} {
 	print_game $game
 	lassign [gets stdin] in1 in2
 	if {$in1 eq ""} {
@@ -41,3 +41,5 @@ while {1} {
 		}
 	}
 }
+print_game $game
+puts "Winner: $winner"
