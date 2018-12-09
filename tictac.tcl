@@ -89,6 +89,7 @@ proc cell_root {bl sl} {
 
 proc handle_move {coords} {
 	lassign $coords b s
+	if {$b eq ""||$s eq ""} return
 	global game_state
 	global legality_square
 	set t [turn $game_state]
@@ -119,13 +120,6 @@ canvas .board -width 600 -height 600 -background white
 bind .board <1> {
 	handle_move [game_coords %x %y]
 }
-source ai.tcl
-bind .board <2> {
-	handle_move [think $game_state]
-}
-bind .board <3> {
-	handle_move [random_move $game_state]
-}
 draw_board .board 0 0 600 600 20
 for {set x 0} {$x<3} {incr x} {
 for {set y 0} {$y<3} {incr y} {
@@ -133,4 +127,38 @@ for {set y 0} {$y<3} {incr y} {
 }}
 update_legality_square
 grid .board
-update
+##### AI Functions
+source ai.tcl
+set ai_level 10
+bind . <F1> {
+	toplevel .levelsel
+	wm title .levelsel "AI Level"
+	grid [ttk::entry .levelsel.e -textvariable ai_level] -padx 5 -pady 5
+	bind .levelsel.e <Return> {
+		destroy .levelsel
+	}
+	.levelsel.e select range 0 end
+	focus .levelsel.e
+}
+bind .board <2> {
+	handle_move [think $game_state $ai_level]
+}
+bind .board <3> {
+	handle_move [random_move $game_state]
+}
+##### AI Progress Bar
+proc progress_trace {name1 name2 op} {
+	upvar $name1 var
+	switch $op {
+	write {
+		catch {grid [ttk::progressbar .ai_progress -length 600 -maximum 100.0] -row 1}
+		.ai_progress configure -value $var
+		update
+	}
+	unset {
+		destroy .ai_progress
+		trace add variable $name1 [list write unset] progress_trace
+	}
+	}
+}
+trace add variable ::ai_progress [list write unset] progress_trace

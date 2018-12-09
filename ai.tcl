@@ -41,6 +41,7 @@ proc think {game {level 10}} {
 	set opponent [next_turn $player]
 	set wincounts [list]
 	puts "\nTurn: $player\nLevel: $level";
+	set ::ai_progress 0
 	foreach move $moves {
 		set wins 0
 		puts -nonewline "\t$move: "; flush stdout;
@@ -51,10 +52,12 @@ proc think {game {level 10}} {
 			switch [check_game_over $tmp] \
 				$player {incr wins} \
 				$opponent {incr wins -1}
+			set ::ai_progress [expr {$::ai_progress+100.0/$level/[llength $moves]}]
 		}
 		puts [format "\t%2d" $wins];
 		lappend wincounts $wins
 	}
+	unset ::ai_progress
 	set choices [list [lindex $moves 0]]
 	set maxwins [lindex $wincounts 0]
 	foreach move $moves wins $wincounts {
