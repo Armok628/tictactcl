@@ -87,14 +87,14 @@ proc cell_root {bl sl} {
 	list $x $y
 }
 
-proc handle_move {b sl} {
+proc handle_move {b s} {
 	global game_state
 	global legality_square
 	set t [turn $game_state]
-	if {[catch {make_move game_state $b $sl} err]} {
+	if {[catch {make_move game_state $b $s} err]} {
 		error $err
 	}
-	draw_$t .board {*}[cell_root $b $sl] 48 48 5
+	draw_$t .board {*}[cell_root $b $s] 48 48 5
 	set winner [check_win [lindex [board $game_state] $b]]
 	if {$winner ne "_"&&$winner ne "tie"} {
 		draw_$winner .board {*}[cell_root $b 0] 146 146 -10
@@ -192,11 +192,9 @@ update_legality_square
 grid .board
 ########################
 source ai.tcl
-bind .board <2> {
-	while {[set coords [random_move $game_state]] ne ""} {
-		handle_move {*}$coords
-	}
-}
 bind .board <3> {
-	puts [think $game_state]
+	handle_move {*}[random_move $game_state]
+}
+bind .board <2> {
+	handle_move {*}[think $game_state]
 }

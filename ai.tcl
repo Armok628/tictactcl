@@ -52,7 +52,6 @@ proc think {game} {
 	set choices [list]
 	set maxwins 0
 	foreach move $moves wins $wincounts {
-		puts "\t$move: $wins"
 		if {$wins>$maxwins} {
 			set choices [list]
 			lappend choices $move
@@ -61,6 +60,5 @@ proc think {game} {
 			lappend choices $move
 		}
 	}
-	puts $choices
 	return [randelt $choices]
 }
