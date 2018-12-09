@@ -20,7 +20,47 @@ proc possible_moves {game} {
 	}
 	return $moves
 }
+global ai_difficulty
+set ai_difficulty 10
+proc randelt {list} {
+	lindex $list [expr {int(rand()*[llength $list])}]
+}
 proc random_move {game} {
+	randelt [possible_moves $game]
+}
+proc finish_game {game_var} {
+	upvar $game_var game
+	while {[set move [random_move $game]] ne ""} {
+		make_move game {*}$move
+	}
+}
+proc think {game} {
+	global ai_difficulty
+	set player [turn $game]
 	set moves [possible_moves $game]
-	return [lindex $moves [expr {int(rand()*[llength $moves])}]]
+	set wincounts [list]
+	foreach move $moves {
+		set wins 0
+		for {set i 0} {$i<$ai_difficulty} {incr i} {
+			set tmp $game
+			make_move tmp {*}$move
+			finish_game tmp
+			if {[check_game_over $tmp] eq $player} {incr wins}
+		}
+		lappend wincounts $wins
+	}
+	set choices [list]
+	set maxwins 0
+	foreach move $moves wins $wincounts {
+		puts "\t$move: $wins"
+		if {$wins>$maxwins} {
+			set choices [list]
+			lappend choices $move
+			set maxwins $wins
+		} elseif {$wins==$maxwins} {
+			lappend choices $move
+		}
+	}
+	puts $choices
+	return [randelt $choices]
 }

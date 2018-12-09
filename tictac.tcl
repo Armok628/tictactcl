@@ -198,5 +198,5 @@ bind .board <2> {
 	}
 }
 bind .board <3> {
-	puts [check_game_over $game_state]
+	puts [think $game_state]
 }
