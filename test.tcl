@@ -6,3 +6,5 @@ while {[check_game_over $game_state] eq "_"} {
 	handle_move {*}[think $game_state]
 }
 # An error will occur if the "thinking" AI loses
+after 2500
+exit
