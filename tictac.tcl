@@ -23,23 +23,23 @@ proc draw_board {c x0 y0 w h {p 0}} {
 		set x($n) [expr {$x0+$n*$w/3}]
 		set y($n) [expr {$y0+$n*$h/3}]
 	}
-	$c create line $x(1) $y(0) $x(1) $y(3)
-	$c create line $x(2) $y(0) $x(2) $y(3)
-	$c create line $x(0) $y(1) $x(3) $y(1)
-	$c create line $x(0) $y(2) $x(3) $y(2)
+	$c create line $x(1) $y(0) $x(1) $y(3) -width 2
+	$c create line $x(2) $y(0) $x(2) $y(3) -width 2
+	$c create line $x(0) $y(1) $x(3) $y(1) -width 2
+	$c create line $x(0) $y(2) $x(3) $y(2) -width 2
 }
 proc draw_x {c x y w h {p 0}} {
 	pad_coords x y w h $p
 	set x2 [expr {$x+$w}]
 	set y2 [expr {$y+$h}]
-	$c create line $x $y $x2 $y2 -fill blue
-	$c create line $x $y2 $x2 $y -fill blue
+	$c create line $x $y $x2 $y2 -fill blue -width 2
+	$c create line $x $y2 $x2 $y -fill blue -width 2
 }
 proc draw_o {c x y w h {p 0}} {
 	pad_coords x y w h $p
 	set x2 [expr {$x+$w}]
 	set y2 [expr {$y+$h}]
-	$c create oval $x $y $x2 $y2 -outline red
+	$c create oval $x $y $x2 $y2 -outline red -width 2
 }
 proc player_color {player} {
 	switch $player {
@@ -56,14 +56,14 @@ proc update_legality_square {} {
 	catch {.board delete $legality_square}
 	set color [player_color [turn $game_state]]
 	if {$nb==-1} {
-		set legality_square [.board create rectangle 10 10 590 590 -outline $color]
+		set legality_square [.board create rectangle 10 10 590 590 -outline $color -width 2]
 	} else {
 		lassign [2d_index $nb] x y
 		set x1 [expr {30+186*$x}]
 		set x2 [expr {196+186*$x}]
 		set y1 [expr {30+186*$y}]
 		set y2 [expr {196+186*$y}]
-		set legality_square [.board create rectangle $x1 $y1 $x2 $y2 -outline $color]
+		set legality_square [.board create rectangle $x1 $y1 $x2 $y2 -outline $color -width 2]
 	}
 }
 proc game_coords {x y} {
