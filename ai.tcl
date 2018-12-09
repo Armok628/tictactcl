@@ -20,8 +20,6 @@ proc possible_moves {game} {
 	}
 	return $moves
 }
-global ai_level
-set ai_level 10
 proc randelt {list} {
 	lindex $list [expr {int(rand()*[llength $list])}]
 }
@@ -34,17 +32,16 @@ proc finish_game {game_var} {
 		make_move game {*}$move
 	}
 }
-proc think {game {bar 0}} {
-	global ai_level
+proc think {game {level 10}} {
 	set player [turn $game]
 	set opponent [next_turn $player]
 	set moves [possible_moves $game]
 	set wincounts [list]
-	puts "\nTurn: $player\nLevel: $ai_level";
+	puts "\nTurn: $player\nLevel: $level";
 	foreach move $moves {
 		set wins 0
 		puts -nonewline "\t$move: "; flush stdout;
-		for {set i 0} {$i<$ai_level} {incr i} {
+		for {set i 0} {$i<$level} {incr i} {
 			set tmp $game
 			make_move tmp {*}$move
 			finish_game tmp
