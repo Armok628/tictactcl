@@ -33,9 +33,12 @@ proc finish_game {game_var} {
 	}
 }
 proc think {game {level 10}} {
+	set moves [possible_moves $game]
+	if {$level<=0} {
+		return [randelt $moves]
+	}
 	set player [turn $game]
 	set opponent [next_turn $player]
-	set moves [possible_moves $game]
 	set wincounts [list]
 	puts "\nTurn: $player\nLevel: $level";
 	foreach move $moves {
