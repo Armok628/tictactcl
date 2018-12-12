@@ -5,11 +5,7 @@ proc turn {game} {lindex $game 0}
 proc next_board {game} {lindex $game 1}
 proc board {game} {lindex $game 2}
 proc next_turn {turn} {
-	switch $turn {
-	x {return o}
-	o {return x}
-	default {error "Invalid turn"}
-	}
+	switch $turn x {return o} o {return x}
 }
 global win_methods
 set win_methods [list \
