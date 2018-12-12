@@ -3,7 +3,6 @@ if {[info procs think] eq ""} {
 	source ai.tcl
 }
 proc think {game {level 10}} { ;# Multithreaded
-	package require Thread
 	set moves [possible_moves $game]
 	if {$level<=0} {
 		return [randelt $moves]
