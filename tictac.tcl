@@ -134,6 +134,9 @@ bind . <F1> {
 	toplevel .levelsel
 	wm title .levelsel "AI Level"
 	grid [ttk::entry .levelsel.e -textvariable ai_level] -padx 5 -pady 5
+	if {[catch {package present Thread}]} {
+		grid [ttk::button .levelsel.b -text "Enable Multithreading" -command {source smtai.tcl; destroy .levelsel.b}] -padx 5 -pady 5
+	}
 	bind .levelsel.e <Return> {
 		destroy .levelsel
 	}

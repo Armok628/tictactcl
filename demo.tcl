@@ -1,5 +1,6 @@
 #!/usr/bin/tclsh
 source tictac.tcl
+source smtai.tcl
 update
 handle_move [random_move $game_state]
 lassign $argv x o
