@@ -120,7 +120,7 @@ canvas .board -width 600 -height 600 -background white
 bind .board <1> {
 	handle_move [game_coords %x %y]
 	if {$sp} {
-		handle_move [think $game_state $ai_level]
+		handle_move [$ai $game_state $ai_level]
 	}
 }
 draw_board .board 0 0 600 600 20
@@ -132,28 +132,55 @@ update_legality_square
 grid .board
 ##### AI Functions
 source ai.tcl
+set ai think
 set ai_level 10
 set sp 0
+proc smtthink {args} {
+	source smtai.tcl; # Will overwrite this proc
+	smtthink {*}$args
+}
 bind . <F1> {
-	toplevel .levelsel
-	wm title .levelsel "AI Level"
-	wm resizable .levelsel 0 0
-	grid [ttk::entry .levelsel.e -textvariable ai_level] -padx 5 -pady 5
-	grid [ttk::checkbutton .levelsel.sp -text "Auto-move" -variable sp] -padx 5 -pady 5
-	if {[catch {package present Thread}]} {
-		grid [ttk::button .levelsel.b -text "Enable Multithreading" -command {source smtai.tcl; destroy .levelsel.b}] -padx 5 -pady 5
+	toplevel .settings
+	wm title .settings "Settings"
+	wm resizable .settings 0 0
+
+	ttk::entry .settings.level_entry -textvariable ai_level
+	grid .settings.level_entry -row 0 -column 0 -columnspan 2 -padx 5 -pady 5 -sticky we
+	bind .settings.level_entry <Return> {
+		destroy .settings
 	}
-	bind .levelsel.e <Return> {
-		destroy .levelsel
+
+	ttk::checkbutton .settings.sp_enable -text "Auto-move" -variable sp
+	grid .settings.sp_enable -row 1 -column 0 -padx 5 -pady 5 -sticky w
+
+	ttk::checkbutton .settings.smt_enable -text "Multithreading" \
+		-variable ai -onvalue smtthink -offvalue think
+	grid .settings.smt_enable -row 1 -column 1 -padx 5 -pady 5 -sticky w
+
+	ttk::button .settings.save -text "Save" -command {
+		set f [open settings.tcl w]
+		foreach var [list ai ai_level sp] {
+			puts $f "set $var [set $var]"
+		}
+		close $f
+		destroy .settings
 	}
-	.levelsel.e select range 0 end
-	focus .levelsel.e
+	grid .settings.save -row 3 -column 1 -padx 5 -pady 5 -sticky e
+
+	grid rowconfigure .settings [list 0 1 2] -weight 1
+	grid columnconfigure .settings [list 0 1] -weight 1
+
+	.settings.level_entry select range 0 end
+	focus .settings.level_entry
 }
 bind .board <2> {
-	handle_move [think $game_state $ai_level]
+	handle_move [$ai $game_state $ai_level]
 }
 bind .board <3> {
 	handle_move [random_move $game_state]
+}
+if {[file exists settings.tcl]} {
+	source settings.tcl
 }
 ##### AI Progress Bar
 proc progress_trace {name1 name2 op} {

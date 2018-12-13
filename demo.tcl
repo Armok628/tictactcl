@@ -10,15 +10,17 @@ foreach arg [lrange $argv 2 end] {
 		-quit {set quit 1}
 	}
 }
+set ai think
 if {$smt} {
 	source smtai.tcl
+	set ai smtthink
 }
 handle_move [random_move $game_state]
 while {1} {
 	if {[set winner [check_game_over $game_state]] ne "_"} break
-	handle_move [think $game_state $o]
+	handle_move [$ai $game_state $o]
 	if {[set winner [check_game_over $game_state]] ne "_"} break
-	handle_move [think $game_state $x]
+	handle_move [$ai $game_state $x]
 }
 puts "Winner: $winner"
 if {$quit} {

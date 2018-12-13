@@ -1,8 +1,5 @@
 package require Thread
-if {[info procs think] eq ""} {
-	source ai.tcl
-}
-proc think {game {level 10}} { ;# Multithreaded
+proc smtthink {game {level 10}} {
 	set moves [possible_moves $game]
 	if {$level<=0} {
 		return [randelt $moves]
