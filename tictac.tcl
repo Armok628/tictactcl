@@ -119,6 +119,9 @@ wm resizable . 0 0
 canvas .board -width 600 -height 600 -background white
 bind .board <1> {
 	handle_move [game_coords %x %y]
+	if {$sp} {
+		handle_move [think $game_state $ai_level]
+	}
 }
 draw_board .board 0 0 600 600 20
 for {set x 0} {$x<3} {incr x} {
@@ -130,10 +133,13 @@ grid .board
 ##### AI Functions
 source ai.tcl
 set ai_level 10
+set sp 0
 bind . <F1> {
 	toplevel .levelsel
 	wm title .levelsel "AI Level"
+	wm resizable .levelsel 0 0
 	grid [ttk::entry .levelsel.e -textvariable ai_level] -padx 5 -pady 5
+	grid [ttk::checkbutton .levelsel.sp -text "Auto-move" -variable sp] -padx 5 -pady 5
 	if {[catch {package present Thread}]} {
 		grid [ttk::button .levelsel.b -text "Enable Multithreading" -command {source smtai.tcl; destroy .levelsel.b}] -padx 5 -pady 5
 	}
