@@ -118,9 +118,11 @@ wm title . "Tic-Tac-Tcl"
 wm resizable . 0 0
 canvas .board -width 600 -height 600 -background white
 bind .board <1> {
-	handle_move [game_coords %x %y]
-	if {$sp} {
-		handle_move [$ai $game_state $ai_level]
+	if {![info exists ::ai_progress]} {
+		handle_move [game_coords %x %y]
+		if {$sp} {
+			handle_move [$ai $game_state $ai_level]
+		}
 	}
 }
 draw_board .board 0 0 600 600 20
@@ -174,10 +176,14 @@ bind . <F1> {
 	focus .settings.level_entry
 }
 bind .board <2> {
-	handle_move [$ai $game_state $ai_level]
+	if {![info exists ::ai_progress]} {
+		handle_move [$ai $game_state $ai_level]
+	}
 }
 bind .board <3> {
-	handle_move [random_move $game_state]
+	if {![info exists ::ai_progress]} {
+		handle_move [random_move $game_state]
+	}
 }
 if {[file exists settings.tcl]} {
 	source settings.tcl
