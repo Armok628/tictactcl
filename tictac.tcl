@@ -28,25 +28,25 @@ proc draw_board {c x0 y0 w h {p 0}} {
 	$c create line $x(0) $y(1) $x(3) $y(1) -width 2
 	$c create line $x(0) $y(2) $x(3) $y(2) -width 2
 }
-proc draw_x {c x y w h {p 0}} {
-	pad_coords x y w h $p
-	set x2 [expr {$x+$w}]
-	set y2 [expr {$y+$h}]
-	$c create line $x $y $x2 $y2 -fill blue -width 2
-	$c create line $x $y2 $x2 $y -fill blue -width 2
-}
-proc draw_o {c x y w h {p 0}} {
-	pad_coords x y w h $p
-	set x2 [expr {$x+$w}]
-	set y2 [expr {$y+$h}]
-	$c create oval $x $y $x2 $y2 -outline red -width 2
-}
 proc player_color {player} {
 	switch $player {
 		x {return blue}
 		o {return red}
 		default {return black}
 	}
+}
+proc draw_x {c x y w h {p 0}} {
+	pad_coords x y w h $p
+	set x2 [expr {$x+$w}]
+	set y2 [expr {$y+$h}]
+	$c create line $x $y $x2 $y2 -fill [player_color x] -width 2
+	$c create line $x $y2 $x2 $y -fill [player_color x] -width 2
+}
+proc draw_o {c x y w h {p 0}} {
+	pad_coords x y w h $p
+	set x2 [expr {$x+$w}]
+	set y2 [expr {$y+$h}]
+	$c create oval $x $y $x2 $y2 -outline [player_color o] -width 2
 }
 global legality_square
 proc update_legality_square {} {
