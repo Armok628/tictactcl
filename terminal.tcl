@@ -7,7 +7,13 @@ proc print_game {game} {
 		for {set small_row 0} {$small_row<9} {incr small_row 3} {
 			for {set i $big_row} {$i<$big_row+3} {incr i} {
 				for {set j $small_row} {$j<$small_row+3} {incr j} {
-					puts -nonewline "[lindex $board $i $j] "
+					set player [lindex $board $i $j]
+					set color "\033\[m"
+					switch $player {
+						x {set color "\033\[34m"}
+						o {set color "\033\[31m"}
+					}
+					puts -nonewline "$color$player\033\[m "
 					if {$i+1<$big_row+3&&$j%3==2} {
 						puts -nonewline "| "
 					}
